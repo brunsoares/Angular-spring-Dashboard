@@ -37,7 +37,7 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
-$primary-overrides: rgb(100, 27, 89);
+$primary-overrides: rgb(145, 55, 131);
 
 :root {
   @include mat.toolbar-overrides(

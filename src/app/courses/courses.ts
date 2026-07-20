@@ -6,11 +6,13 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { catchError, of } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
 import { ICourse } from './model/course';
 import { CoursesService } from './services/courses';
 import { CategoryPipe } from '../shared/pipes/category-pipe';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-courses',
@@ -21,6 +23,7 @@ import { CategoryPipe } from '../shared/pipes/category-pipe';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
+    MatButtonModule,
     CategoryPipe,
     AsyncPipe,
   ],
@@ -29,10 +32,12 @@ import { CategoryPipe } from '../shared/pipes/category-pipe';
 })
 export class Courses implements OnInit {
   courses$: Observable<Array<ICourse>>;
-  columns: Array<string> = ['name', 'category'];
+  readonly columns: Array<string> = ['name', 'category', 'actions'];
 
   private readonly _coursesService: CoursesService = inject(CoursesService);
   private readonly _snackBar: MatSnackBar = inject(MatSnackBar);
+  private readonly _router: Router = inject(Router);
+  private readonly _route: ActivatedRoute = inject(ActivatedRoute);
   constructor() {
     this.courses$ = this._coursesService.list().pipe(
       catchError((error) => {
@@ -43,4 +48,8 @@ export class Courses implements OnInit {
   }
 
   ngOnInit(): void {}
+
+  onAdd() {
+    this._router.navigate(['new'], { relativeTo: this._route });
+  }
 }

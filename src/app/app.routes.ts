@@ -8,6 +8,15 @@ export const routes: Routes = [
   },
   {
     path: 'courses',
-    loadComponent: () => import('./courses/courses').then((c) => c.Courses),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./courses/courses').then((c) => c.Courses),
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./courses/course-form/course-form').then((c) => c.CourseForm),
+      },
+    ],
   },
 ];

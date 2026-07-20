@@ -1,18 +1,18 @@
-import { inject, Service } from '@angular/core';
-import { ICourse } from '../model/course';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { of } from 'rxjs';
+import { inject, Service } from '@angular/core';
+import { first, Observable } from 'rxjs';
+import { ICourse } from '../model/course';
 
 @Service()
 export class CoursesService {
+  private readonly _baseUrl: string = '/api/courses';
   private readonly _httpClient: HttpClient = inject(HttpClient);
 
   list(): Observable<Array<ICourse>> {
-    return of<Array<ICourse>>([
-      { _id: '1', name: 'Introduction to Angular', category: 'Frontend' },
-      { _id: '2', name: 'Advanced TypeScript', category: 'Programming' },
-      { _id: '3', name: 'Spring Boot Fundamentals', category: 'Backend' },
-    ]);
+    return this._httpClient.get<Array<ICourse>>(this._baseUrl).pipe(first());
+  }
+
+  save(course: ICourse): Observable<ICourse> {
+    return this._httpClient.post<ICourse>(this._baseUrl, course);
   }
 }
