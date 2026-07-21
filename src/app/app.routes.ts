@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { courseResolver } from './courses/course-form/course-resolver';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,13 @@ export const routes: Routes = [
       {
         path: 'new',
         loadComponent: () => import('./courses/course-form/course-form').then((c) => c.CourseForm),
+      },
+      {
+        path: 'edit/:id',
+        loadComponent: () => import('./courses/course-form/course-form').then((c) => c.CourseForm),
+        resolve: {
+          course: courseResolver,
+        },
       },
     ],
   },

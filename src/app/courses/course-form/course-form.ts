@@ -1,13 +1,22 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  UntypedFormArray,
+  Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CoursesService } from '../services/courses';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ICourse } from '../model/course';
+import { ILesson } from '../model/lesson';
 
 @Component({
   selector: 'app-course-form',
@@ -18,6 +27,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatCardModule,
     MatToolbarModule,
     MatButtonModule,
+    MatIconModule,
   ],
   templateUrl: './course-form.html',
   styleUrl: './course-form.scss',
@@ -31,33 +41,93 @@ export class CourseForm {
   private readonly _snackBar = inject(MatSnackBar);
 
   constructor() {
-    this.createForm();
+    this.getCourse();
+    console.log(this.form.value);
   }
 
-  private createForm() {
+  private createForm(course: ICourse = { _id: '', name: '', category: '', lessons: [] }) {
     this.form = this._formBuilder.group({
-      name: [''],
-      category: [''],
+      _id: [course._id],
+      name: [course.name, [Validators.required, Validators.maxLength(100)]],
+      category: [course.category, [Validators.required]],
+      lessons: this._formBuilder.array(this.retriveLessons(course)),
     });
+  }
+
+  private retriveLessons(course: ICourse): Array<FormGroup> {
+    const lessons: Array<FormGroup> = [];
+    if (course.lessons && course.lessons.length > 0) {
+      course.lessons.forEach((lesson) => {
+        lessons.push(this.createLessonFormGroup(lesson));
+      });
+    } else {
+      lessons.push(this.createLessonFormGroup());
+    }
+    return lessons;
+  }
+
+  private createLessonFormGroup(
+    lesson: ILesson = { _id: '', name: '', youtubeUrl: '' },
+  ): FormGroup {
+    return this._formBuilder.group({
+      _id: [lesson._id],
+      name: [lesson.name, Validators.required],
+      youtubeUrl: [lesson.youtubeUrl, Validators.required],
+    });
+  }
+
+  private getCourse() {
+    const course = this._route.snapshot.data['course'] as ICourse;
+    this.createForm(course);
+  }
+
+  private redirectToList() {
+    if (this.form.value._id) {
+      this._router.navigate(['../../'], { relativeTo: this._route });
+    } else {
+      this._router.navigate(['../'], { relativeTo: this._route });
+    }
   }
 
   onSubmit() {
-    this._coursesService.save(this.form.value).subscribe({
-      next: (course) => {
-        this._snackBar.open('Curso salvo com sucesso', '', { duration: 3000 });
-        this._router.navigate(['../'], { relativeTo: this._route });
-      },
-      error: (error) => {
-        this._snackBar.open('Erro ao salvar curso', 'Ok', {
-          duration: 3000,
-          panelClass: ['snackbar-error'],
-        });
-      },
-    });
+    if (this.form.valid) {
+      this._coursesService.save(this.form.value).subscribe({
+        next: (course) => {
+          this._snackBar.open('Curso salvo com sucesso', '', { duration: 3000 });
+          this.redirectToList();
+        },
+        error: (error) => {
+          this._snackBar.open('Erro ao salvar curso', 'Ok', {
+            duration: 3000,
+          });
+        },
+      });
+    } else {
+      this.form.markAllAsTouched();
+      this._snackBar.open('Formulário inválido. Verifique os campos obrigatórios.', '', {
+        duration: 2000,
+      });
+    }
   }
 
   onCancel() {
+    this.redirectToList();
     this.form.reset();
-    this._router.navigate(['../'], { relativeTo: this._route });
+  }
+
+  getErrorMessage(fieldName: string): string {
+    const field = this.form.get(fieldName);
+    if (field?.hasError('required')) {
+      return 'Campo obrigatório';
+    }
+    if (field?.hasError('maxlength')) {
+      const requiredLength = field.getError('maxlength').requiredLength;
+      return `O campo deve ter no máximo ${requiredLength} caracteres`;
+    }
+    return '';
+  }
+
+  getLessonsFormArray() {
+    return (<UntypedFormArray>this.form.get('lessons')).controls;
   }
 }
