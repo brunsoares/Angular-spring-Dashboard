@@ -7,7 +7,7 @@
         <input matInput formControlName="name" />
         <mat-hint align="end">{{ form.get('name')?.value.length || 0 }}/100</mat-hint>
         @if (form.get('name')?.invalid) {
-          <mat-error>{{ getErrorMessage('name') }}</mat-error>
+          <mat-error>{{ getErrorMessage('name', false) }}</mat-error>
         }
       </mat-form-field>
 
@@ -19,26 +19,26 @@
           <mat-option value="Programming">Programação</mat-option>
         </mat-select>
         @if (form.get('category')?.invalid) {
-          <mat-error>{{ getErrorMessage('category') }}</mat-error>
+          <mat-error>{{ getErrorMessage('category', false) }}</mat-error>
         }
       </mat-form-field>
 
       <mat-toolbar>
         <span>Aulas</span>
-        <button mat-icon-button>
+        <button mat-icon-button (click)="addNewLesson()">
           <mat-icon>add</mat-icon>
         </button>
       </mat-toolbar>
       <table class="full-width" formArrayName="lessons">
-        @for (lesson of getLessonsFormArray(); track $index) {
+        @for (lesson of getLessonsFormArray(); track lesson; let i = $index) {
           <tr [formGroupName]="$index">
             <td class="w-70">
               <mat-form-field class="full-width">
                 <mat-label>Título da aula:</mat-label>
                 <input matInput formControlName="name" />
-                <mat-hint align="end">{{ form.get('name')?.value.length || 0 }}/100</mat-hint>
-                @if (form.get('name')?.invalid) {
-                  <mat-error>{{ getErrorMessage('name') }}</mat-error>
+                <mat-hint align="end">{{ lesson.get('name')?.value.length || 0 }}/100</mat-hint>
+                @if (lesson.get('name')?.invalid) {
+                  <mat-error>{{ getErrorMessage('name', true) }}</mat-error>
                 }
               </mat-form-field>
             </td>
@@ -47,11 +47,18 @@
                 <mat-label>URL do youtube:</mat-label>
                 <input matInput formControlName="youtubeUrl" />
                 <span matPrefix>https://youtu.be/</span>
-                <mat-hint align="end">{{ form.get('youtubeUrl')?.value.length || 0 }}/100</mat-hint>
-                @if (form.get('youtubeUrl')?.invalid) {
-                  <mat-error>{{ getErrorMessage('youtubeUrl') }}</mat-error>
+                <mat-hint align="end"
+                  >{{ lesson.get('youtubeUrl')?.value.length || 0 }}/20</mat-hint
+                >
+                @if (lesson.get('youtubeUrl')?.invalid) {
+                  <mat-error>{{ getErrorMessage('youtubeUrl', true) }}</mat-error>
                 }
               </mat-form-field>
+            </td>
+            <td>
+              <button mat-icon-button (click)="removeLesson(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
             </td>
           </tr>
         }

@@ -50,7 +50,7 @@ export class CourseForm {
       _id: [course._id],
       name: [course.name, [Validators.required, Validators.maxLength(100)]],
       category: [course.category, [Validators.required]],
-      lessons: this._formBuilder.array(this.retriveLessons(course)),
+      lessons: this._formBuilder.array(this.retriveLessons(course), Validators.required),
     });
   }
 
@@ -71,8 +71,8 @@ export class CourseForm {
   ): FormGroup {
     return this._formBuilder.group({
       _id: [lesson._id],
-      name: [lesson.name, Validators.required],
-      youtubeUrl: [lesson.youtubeUrl, Validators.required],
+      name: [lesson.name, [Validators.required, Validators.maxLength(100)]],
+      youtubeUrl: [lesson.youtubeUrl, [Validators.required, Validators.maxLength(20)]],
     });
   }
 
@@ -115,8 +115,16 @@ export class CourseForm {
     this.form.reset();
   }
 
-  getErrorMessage(fieldName: string): string {
-    const field = this.form.get(fieldName);
+  getErrorMessage(fieldName: string, isFormArray: boolean): string {
+    let field;
+    if (isFormArray) {
+      const lessonsFormArray = this.form.get('lessons') as UntypedFormArray;
+      field = lessonsFormArray.controls
+        .find((lesson) => lesson.get(fieldName)?.invalid)
+        ?.get(fieldName);
+    } else {
+      field = this.form.get(fieldName);
+    }
     if (field?.hasError('required')) {
       return 'Campo obrigatório';
     }
@@ -129,5 +137,15 @@ export class CourseForm {
 
   getLessonsFormArray() {
     return (<UntypedFormArray>this.form.get('lessons')).controls;
+  }
+
+  addNewLesson() {
+    const lessonsFormArray = this.form.get('lessons') as UntypedFormArray;
+    lessonsFormArray.push(this.createLessonFormGroup());
+  }
+
+  removeLesson(index: number) {
+    const lessonsFormArray = this.form.get('lessons') as UntypedFormArray;
+    lessonsFormArray.removeAt(index);
   }
 }

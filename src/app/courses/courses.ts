@@ -1,20 +1,22 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
+import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of, startWith, Subject, switchMap } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
+import { DialogConfirm } from '../shared/components/dialog-confirm/dialog-confirm';
+import { CategoryPipe } from '../shared/pipes/category-pipe';
 import { ICourse } from './model/course';
 import { CoursesService } from './services/courses';
-import { CategoryPipe } from '../shared/pipes/category-pipe';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
-import { DialogConfirm } from '../shared/components/dialog-confirm/dialog-confirm';
+import { IPageCourse } from './model/page-course';
 
 @Component({
   selector: 'app-courses',
@@ -26,14 +28,17 @@ import { DialogConfirm } from '../shared/components/dialog-confirm/dialog-confir
     MatSnackBarModule,
     MatIconModule,
     MatButtonModule,
+    MatPaginatorModule,
     CategoryPipe,
     AsyncPipe,
   ],
   templateUrl: './courses.html',
   styleUrl: './courses.scss',
 })
-export class Courses implements OnInit {
-  courses$: Observable<Array<ICourse>>;
+export class Courses {
+  pageCourses$: Observable<IPageCourse>;
+  pageSize: number = 5;
+  pageIndex: number = 0;
   readonly columns: Array<string> = ['name', 'category', 'actions'];
 
   private readonly _coursesService: CoursesService = inject(CoursesService);
@@ -42,14 +47,14 @@ export class Courses implements OnInit {
   private readonly _router: Router = inject(Router);
   private readonly _route: ActivatedRoute = inject(ActivatedRoute);
   private readonly _dialog: MatDialog = inject(MatDialog);
+
+  @ViewChild('paginator', { static: true }) paginator!: MatPaginator;
   constructor() {
-    this.courses$ = this._reloadCourses$.pipe(
+    this.pageCourses$ = this._reloadCourses$.pipe(
       startWith(void 0),
       switchMap(() => this.loadCourses()),
     );
   }
-
-  ngOnInit(): void {}
 
   onAdd() {
     this._router.navigate(['new'], { relativeTo: this._route });
@@ -75,11 +80,17 @@ export class Courses implements OnInit {
     });
   }
 
-  private loadCourses(): Observable<Array<ICourse>> {
-    return this._coursesService.list().pipe(
+  onPageChange(page: PageEvent) {
+    this.pageIndex = page.pageIndex;
+    this.pageSize = page.pageSize;
+    this._reloadCourses$.next();
+  }
+
+  private loadCourses(): Observable<IPageCourse> {
+    return this._coursesService.list(this.pageIndex, this.pageSize).pipe(
       catchError((error) => {
         this._snackBar.open('Ops! Ocorreu um erro ao buscar os cursos.', 'Ok', { duration: 5000 });
-        return of([]);
+        return of({} as IPageCourse);
       }),
     );
   }

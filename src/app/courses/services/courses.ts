@@ -2,14 +2,17 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { first, Observable } from 'rxjs';
 import { ICourse } from '../model/course';
+import { IPageCourse } from '../model/page-course';
 
 @Service()
 export class CoursesService {
   private readonly _baseUrl: string = '/api/courses';
   private readonly _httpClient: HttpClient = inject(HttpClient);
 
-  list(): Observable<Array<ICourse>> {
-    return this._httpClient.get<Array<ICourse>>(this._baseUrl).pipe(first());
+  list(page: number, size: number): Observable<IPageCourse> {
+    return this._httpClient
+      .get<IPageCourse>(`${this._baseUrl}?page=${page}&size=${size}`)
+      .pipe(first());
   }
 
   findById(courseId: string): Observable<ICourse> {
